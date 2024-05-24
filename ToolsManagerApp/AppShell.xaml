@@ -6,9 +6,12 @@
     xmlns:local="clr-namespace:ToolsManagerApp"
     Shell.FlyoutBehavior="Disabled">
 
-    <ShellContent
+    <!-- <ShellContent
         Title="Home"
         ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Route="MainPage" /> -->
+         <ShellItem>
+        <ShellContent Title="Users" ContentTemplate="{DataTemplate local:UserPage}"/>
+    </ShellItem>
 
 </Shell>
