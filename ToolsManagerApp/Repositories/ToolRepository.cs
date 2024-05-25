@@ -9,11 +9,13 @@ namespace ToolsManagerApp.Repositories
     public class ToolRepository : IToolRepository
     {
         private readonly IMongoCollection<Tool> _tools;
+        private readonly IMongoCollection<User> _users; // Added user collection
         private readonly ILogger<ToolRepository> _logger;
 
         public ToolRepository(IMongoDatabase database, ILogger<ToolRepository> logger)
         {
             _tools = database.GetCollection<Tool>("Tools");
+            _users = database.GetCollection<User>("Users"); // Initialize user collection
             _logger = logger;
         }
 
@@ -46,6 +48,20 @@ namespace ToolsManagerApp.Repositories
         public async Task DeleteToolAsync(string id)
         {
             await _tools.DeleteOneAsync(tool => tool.Id == id);
+        }
+
+        public async Task AssignToolToUserAsync(string toolId, string userId)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+            var update = Builders<User>.Update.AddToSet(u => u.AssignedToolIds, toolId);
+            await _users.UpdateOneAsync(filter, update);
+        }
+
+        public async Task RemoveToolFromUserAsync(string toolId, string userId)
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+            var update = Builders<User>.Update.Pull(u => u.AssignedToolIds, toolId);
+            await _users.UpdateOneAsync(filter, update);
         }
     }
 }
