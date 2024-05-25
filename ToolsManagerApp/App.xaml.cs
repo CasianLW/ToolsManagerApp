@@ -72,6 +72,9 @@ using MongoDB.Driver;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using DotNetEnv;
+using ToolsManagerApp.Models;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace ToolsManagerApp
 {
@@ -83,7 +86,6 @@ namespace ToolsManagerApp
         {
             InitializeComponent();
             Env.Load();
-
 
             var serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection);
@@ -104,13 +106,15 @@ namespace ToolsManagerApp
 
         private void ConfigureServices(IServiceCollection services)
         {
-
             // Get MongoDB connection string from environment variable
             var connectionString = Env.GetString("MONGODB_CONNECTION_STRING");
 
             // Initialize MongoDB
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase("ToolsManagerDb");
+
+            // Register MongoDB instance
+            services.AddSingleton(database);
 
             // Register logging
             services.AddLogging(configure => configure.AddConsole());
@@ -122,9 +126,23 @@ namespace ToolsManagerApp
                 return new UserRepository(database, logger);
             });
 
+            services.AddSingleton<IToolRepository>(provider =>
+            {
+                var logger = provider.GetRequiredService<ILogger<ToolRepository>>();
+                return new ToolRepository(database, logger);
+            });
+
+            services.AddSingleton<ICategoryRepository>(provider =>
+            {
+                var logger = provider.GetRequiredService<ILogger<CategoryRepository>>();
+                return new CategoryRepository(database, logger);
+            });
+
             // Register view models
             services.AddTransient<LoginViewModel>();
             services.AddTransient<UsersViewModel>();
+            services.AddTransient<ToolsViewModel>();
+            services.AddTransient<UserToolsViewModel>();
         }
 
         private async Task SeedDatabase()
@@ -134,7 +152,52 @@ namespace ToolsManagerApp
             {
                 await userRepository.EnsureAdminUserAsync();
             }
+
+            var toolRepository = ServiceProvider.GetService<IToolRepository>();
+            var categoryRepository = ServiceProvider.GetService<ICategoryRepository>();
+            if (toolRepository != null && categoryRepository != null)
+            {
+                await EnsureCategoriesAndToolsAsync(toolRepository, categoryRepository);
+            }
+        }
+
+        private async Task EnsureCategoriesAndToolsAsync(IToolRepository toolRepository, ICategoryRepository categoryRepository)
+        {
+            // Seed categories
+            var existingCategories = await categoryRepository.GetAllCategoriesAsync();
+            if (existingCategories == null || !existingCategories.Any())
+            {
+                var categories = new List<Category>
+                {
+                    new Category { Name = "Hand Tools", Description = "Manual tools" },
+                    new Category { Name = "Power Tools", Description = "Tools powered by electricity" },
+                    new Category { Name = "Garden Tools", Description = "Tools for gardening" }
+                };
+
+                foreach (var category in categories)
+                {
+                    await categoryRepository.AddCategoryAsync(category);
+                }
+            }
+
+            // Seed tools
+            var existingTools = await toolRepository.GetAllToolsAsync();
+            if (existingTools == null || !existingTools.Any())
+            {
+                var categories = await categoryRepository.GetAllCategoriesAsync();
+
+                var tools = new List<Tool>
+                {
+                    new Tool { Name = "Hammer", CategoryId = categories.First(c => c.Name == "Hand Tools").Id, Status = StatusEnum.Available, QRCode = "12345" },
+                    new Tool { Name = "Drill", CategoryId = categories.First(c => c.Name == "Power Tools").Id, Status = StatusEnum.Available, QRCode = "67890" },
+                    new Tool { Name = "Rake", CategoryId = categories.First(c => c.Name == "Garden Tools").Id, Status = StatusEnum.Available, QRCode = "11223" }
+                };
+
+                foreach (var tool in tools)
+                {
+                    await toolRepository.AddToolAsync(tool);
+                }
+            }
         }
     }
 }
-
