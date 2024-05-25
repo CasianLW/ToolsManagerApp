@@ -1,3 +1,9 @@
+# Tools Manager
+
+![gif](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHg1cWRoZjRqbjFqb2RhdHZnMmF0NDVjZjhiaHprZ2d3aWZwZ2l5cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/TKXrzWjZhgs1JtLVd5/giphy.gif)
+
+## Installation / utilisation (to be continued)
+
 dotnet installations:
 
 dotnet add package CommunityToolkit.Mvvm
