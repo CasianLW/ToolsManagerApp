@@ -1,10 +1,17 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ToolsManagerApp.ViewModels"
+             xmlns:conv="clr-namespace:ToolsManagerApp.Converters"
              x:Class="ToolsManagerApp.Views.UserPage">
     <ContentPage.BindingContext>
         <vm:UsersViewModel />
     </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <StackLayout Padding="10">
         <ListView ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}">
