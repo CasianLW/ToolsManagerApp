@@ -41,6 +41,7 @@ ToolsManagerApp is a comprehensive tool management application designed to strea
 3. ViewModel: Acts as an intermediary between the Model and View, handling data binding and command logic.
 4. Handles data operations and communication with the database. Provides an abstraction layer between the data access layer and the business logic.
    Example found in our project:
+   ```
    ToolsManagerApp/
    │
    ├── Models/
@@ -57,6 +58,7 @@ ToolsManagerApp is a comprehensive tool management application designed to strea
    ├── Repositories/
    │ ├── ICategoryRepository.cs
    │ └── CategoryRepository.cs
+   ```
    \*This version is structured for clarity and readability, making it easy for others to understand the project organization and MVVM pattern.
 
 ## Installation
@@ -106,7 +108,9 @@ ToolsManagerApp is a comprehensive tool management application designed to strea
 
 This project is licensed under the MIT License.
 
-### Other informations that i might delete later:
+## Other informations :
+
+\*that i might delete later
 
 dotnet installations:
 
