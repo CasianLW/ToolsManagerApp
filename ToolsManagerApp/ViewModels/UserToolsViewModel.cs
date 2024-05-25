@@ -26,6 +26,9 @@ namespace ToolsManagerApp.ViewModels
 
             LoadUserToolsCommand = new AsyncRelayCommand(LoadUserToolsAsync);
             Tools = new ObservableCollection<Tool>();
+
+            // Load user tools when the view model is initialized
+            LoadUserToolsCommand.Execute(null);
         }
 
         public ObservableCollection<Tool> Tools { get; }
@@ -47,7 +50,7 @@ namespace ToolsManagerApp.ViewModels
 
                 var currentUser = await _userRepository.GetUserByEmailAsync(UserSession.Instance.Email);
 
-                if (currentUser != null)
+                if (currentUser != null && currentUser.AssignedToolIds != null)
                 {
                     var tools = await _toolRepository.GetToolsByIdsAsync(currentUser.AssignedToolIds);
                     foreach (var tool in tools)
