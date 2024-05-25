@@ -3,9 +3,9 @@
              xmlns:vm="clr-namespace:ToolsManagerApp.ViewModels"
              x:Class="ToolsManagerApp.Views.UserToolsPage">
 
-    <!-- <ContentPage.BindingContext>
+    <ContentPage.BindingContext>
         <vm:UserToolsViewModel />
-    </ContentPage.BindingContext> -->
+    </ContentPage.BindingContext>
 
     <StackLayout Padding="10">
         <ListView ItemsSource="{Binding Tools}">
