@@ -1,4 +1,14 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="456" height="456" viewBox="0 0 456 456" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <rect x="0" y="0" width="456" height="456" fill="#512BD4" />
+<svg width="456" height="456" viewBox="0 0 456 456" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M309 7H147C69.6801 7 7 69.6801 7 147V309C7 386.32 69.6801 449 147 449H309C386.32 449 449 386.32 449 309V147C449 69.6801 386.32 7 309 7Z" fill="url(#paint0_linear_231_22)"/>
+<path d="M308 8H148C70.6801 8 8 70.6801 8 148V308C8 385.32 70.6801 448 148 448H308C385.32 448 448 385.32 448 308V148C448 70.6801 385.32 8 308 8Z" fill="url(#paint1_radial_231_22)"/>
+<defs>
+<linearGradient id="paint0_linear_231_22" x1="-44.6778" y1="6.99999" x2="449.773" y2="449.552" gradientUnits="userSpaceOnUse">
+<stop stop-color="#7000FF"/>
+<stop offset="1" stop-color="#0E52D5"/>
+</linearGradient>
+<radialGradient id="paint1_radial_231_22" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(228 228) rotate(90) scale(220)">
+<stop offset="0.520023"/>
+<stop offset="1" stop-color="#080808"/>
+</radialGradient>
+</defs>
 </svg>
