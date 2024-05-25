@@ -1,11 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Windows.Input;
-using ToolsManagerApp.Repositories;
 using ToolsManagerApp.Models;
+using ToolsManagerApp.Repositories;
+using System.Windows.Input;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using System;
+using ToolsManagerApp.Services;
 
 namespace ToolsManagerApp.ViewModels
 {
@@ -47,40 +48,38 @@ namespace ToolsManagerApp.ViewModels
             set => SetProperty(ref _isLoading, value);
         }
 
-        private bool _isLoginSuccessful;
-        public bool IsLoginSuccessful
-        {
-            get => _isLoginSuccessful;
-            set => SetProperty(ref _isLoginSuccessful, value);
-        }
-
         public ICommand LoginCommand { get; }
 
         private async Task OnLoginAsync()
         {
             IsLoading = true;
             ErrorMessage = string.Empty;
-            IsLoginSuccessful = false;
 
             try
             {
-                var user = await _userRepository.GetUserByEmailAndPasswordAsync(Email, Password);
-                if (user != null)
+                var user = await _userRepository.GetUserByEmailAsync(Email);
+                if (user != null && user.Password == Password)
                 {
-                    IsLoginSuccessful = true;
-                    // Handle successful login (navigate to next page)
-                    await Shell.Current.GoToAsync("//UserPage");
+                    UserSession.Instance.Email = Email;
+                    UserSession.Instance.Role = user.Role;
+
+                    if (user.Role == RoleEnum.Admin)
+                    {
+                        await Shell.Current.GoToAsync("UserPage");
+                    }
+                    else
+                    {
+                        await Shell.Current.GoToAsync("UserToolsPage");
+                    }
                 }
                 else
                 {
-                    // Handle login failure (show error message)
                     ErrorMessage = "Invalid email or password.";
                     await Application.Current.MainPage.DisplayAlert("Login Failed", ErrorMessage, "OK");
                 }
             }
             catch (Exception ex)
             {
-                // Handle any exceptions that occur during login
                 ErrorMessage = $"An error occurred: {ex.Message}";
                 await Application.Current.MainPage.DisplayAlert("Error", ErrorMessage, "OK");
             }
