@@ -108,10 +108,11 @@ namespace ToolsManagerApp
         {
             // Get MongoDB connection string from environment variable
             var connectionString = Env.GetString("MONGODB_CONNECTION_STRING");
+            var connectionDatabase = Env.GetString("MONGO_DATABASE_NAME");
 
             // Initialize MongoDB
             var client = new MongoClient(connectionString);
-            var database = client.GetDatabase("ToolsManagerDb");
+            var database = client.GetDatabase(connectionDatabase);
 
             // Register MongoDB instance
             services.AddSingleton(database);
