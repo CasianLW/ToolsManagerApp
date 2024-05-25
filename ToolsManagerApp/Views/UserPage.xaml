@@ -1,24 +1,25 @@
-<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ToolsManagerApp.ViewModels"
              x:Class="ToolsManagerApp.Views.UserPage">
-
     <ContentPage.BindingContext>
-        <vm:UserViewModel/>
+        <vm:UsersViewModel />
     </ContentPage.BindingContext>
 
     <StackLayout Padding="10">
-        <Entry Placeholder="Name" Text="{Binding Name}"/>
-        <Entry Placeholder="Email" Text="{Binding Email}"/>
-        <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True"/>
-        <Button Text="Create User" Command="{Binding CreateUserCommand}"/>
-        <ListView ItemsSource="{Binding Users}">
+        <ListView ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <TextCell Text="{Binding Name}" Detail="{Binding Email}"/>
+                    <TextCell Text="{Binding Name}" Detail="{Binding Email}" />
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+
+        <Entry Placeholder="Name" Text="{Binding NewUserName}" />
+        <Entry Placeholder="Email" Text="{Binding NewUserEmail}" />
+        <Entry Placeholder="Password" Text="{Binding NewUserPassword}" IsPassword="True" />
+        <Button Text="Add User" Command="{Binding AddUserCommand}" />
+        <Button Text="Update User" Command="{Binding UpdateUserCommand}" IsEnabled="{Binding SelectedUser, Converter={StaticResource NullToBoolConverter}}" />
+        <Button Text="Delete User" Command="{Binding DeleteUserCommand}" IsEnabled="{Binding SelectedUser, Converter={StaticResource NullToBoolConverter}}" />
     </StackLayout>
 </ContentPage>
