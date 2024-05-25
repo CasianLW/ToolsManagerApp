@@ -190,9 +190,9 @@ namespace ToolsManagerApp
 
                 var tools = new List<Tool>
                 {
-                    new Tool { Name = "Hammer", CategoryId = categories.First(c => c.Name == "Hand Tools").Id, Status = StatusEnum.Available, QRCode = "12345" },
-                    new Tool { Name = "Drill", CategoryId = categories.First(c => c.Name == "Power Tools").Id, Status = StatusEnum.Available, QRCode = "67890" },
-                    new Tool { Name = "Rake", CategoryId = categories.First(c => c.Name == "Garden Tools").Id, Status = StatusEnum.Available, QRCode = "11223" }
+                    new Tool { Name = "Hammer", CategoryId = categories.First(c => c.Name == "Hand Tools").Id, Status = StatusEnum.Working, QRCode = "12345" },
+                    new Tool { Name = "Drill", CategoryId = categories.First(c => c.Name == "Power Tools").Id, Status = StatusEnum.Working, QRCode = "67890" },
+                    new Tool { Name = "Rake", CategoryId = categories.First(c => c.Name == "Garden Tools").Id, Status = StatusEnum.Working, QRCode = "11223" }
                 };
 
                 foreach (var tool in tools)
