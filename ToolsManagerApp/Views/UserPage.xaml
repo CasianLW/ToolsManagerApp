@@ -2,7 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ToolsManagerApp.ViewModels"
              xmlns:conv="clr-namespace:ToolsManagerApp.Converters"
-             x:Class="ToolsManagerApp.Views.UserPage">
+             x:Class="ToolsManagerApp.Views.UserPage"
+             Title="Users">
+
     <ContentPage.BindingContext>
         <vm:UsersViewModel />
     </ContentPage.BindingContext>
