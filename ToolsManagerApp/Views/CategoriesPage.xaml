@@ -1,0 +1,36 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ToolsManagerApp.ViewModels"
+             xmlns:conv="clr-namespace:ToolsManagerApp.Converters"
+             x:Class="ToolsManagerApp.Views.CategoriesPage"
+             Title="Categories">
+
+    <ContentPage.BindingContext>
+        <vm:CategoriesViewModel />
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:NullToBoolConverter x:Key="NullToBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <StackLayout Padding="10">
+        <ListView ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextCell Text="{Binding Name}" Detail="{Binding Description}" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <Button Text="Unselect Category" Command="{Binding UnselectCategoryCommand}" IsVisible="{Binding SelectedCategory, Converter={StaticResource NullToBoolConverter}}" />
+
+        <Entry Placeholder="Category Name" Text="{Binding NewCategoryName}" />
+        <Entry Placeholder="Category Description" Text="{Binding NewCategoryDescription}" />
+
+        <Button Text="Add Category" Command="{Binding AddCategoryCommand}" />
+        <Button Text="Update Category" Command="{Binding UpdateCategoryCommand}" IsEnabled="{Binding SelectedCategory, Converter={StaticResource NullToBoolConverter}}" />
+        <Button Text="Delete Category" Command="{Binding DeleteCategoryCommand}" IsEnabled="{Binding SelectedCategory, Converter={StaticResource NullToBoolConverter}}" />
+    </StackLayout>
+</ContentPage>
