@@ -1,18 +1,21 @@
-<?xml version="1.0" encoding="UTF-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ToolsManagerApp.ViewModels"
-             x:Class="ToolsManagerApp.Views.ToolsPage">
+             xmlns:conv="clr-namespace:ToolsManagerApp.Converters"
+             x:Class="ToolsManagerApp.Views.ToolsPage"
+             Title="Tools">
 
     <ContentPage.BindingContext>
         <vm:ToolsViewModel />
     </ContentPage.BindingContext>
 
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:NullToFalseConverter x:Key="NullToFalseConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
     <StackLayout Padding="10">
-        <Entry Placeholder="Tool Name" Text="{Binding NewToolName}" />
-        <Entry Placeholder="Tool Description" Text="{Binding NewToolDescription}" />
-        <Picker Title="Category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding NewToolCategory}" />
-        <Button Text="Add Tool" Command="{Binding AddToolCommand}" />
         <ListView ItemsSource="{Binding Tools}" SelectedItem="{Binding SelectedTool}">
             <ListView.ItemTemplate>
                 <DataTemplate>
@@ -20,7 +23,13 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <Button Text="Update Tool" Command="{Binding UpdateToolCommand}" IsEnabled="{Binding SelectedTool}" />
-        <Button Text="Delete Tool" Command="{Binding DeleteToolCommand}" IsEnabled="{Binding SelectedTool}" />
+
+        <Entry Placeholder="Tool Name" Text="{Binding NewToolName}" />
+        <Entry Placeholder="Tool Description" Text="{Binding NewToolDescription}" />
+        <Picker Title="Category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding NewToolCategory}" />
+
+        <Button Text="Add Tool" Command="{Binding AddToolCommand}" />
+        <Button Text="Update Tool" Command="{Binding UpdateToolCommand}" IsEnabled="{Binding SelectedTool, Converter={StaticResource NullToFalseConverter}}" />
+        <Button Text="Delete Tool" Command="{Binding DeleteToolCommand}" IsEnabled="{Binding SelectedTool, Converter={StaticResource NullToFalseConverter}}" />
     </StackLayout>
 </ContentPage>
