@@ -4,33 +4,16 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:ToolsManagerApp.Views"
-
     Shell.FlyoutBehavior="Disabled">
-    <!-- xmlns:local="clr-namespace:ToolsManagerApp" -->
 
+    <ShellContent Title="Login" ContentTemplate="{DataTemplate local:LoginPage}" Route="LoginPage" />
 
-        <!-- <ShellItem>
-            <ShellContent Title="Login" ContentTemplate="{DataTemplate local:LoginPage}" Route="LoginPage" />
-            <ShellContent Title="Users" ContentTemplate="{DataTemplate local:UserPage}" Route="UserPage" />
-        </ShellItem> -->
+    <ShellContent Title="Users" ContentTemplate="{DataTemplate local:UserPage}" Route="UserPage" />
+    <ShellContent Title="Tools" ContentTemplate="{DataTemplate local:ToolsPage}" Route="ToolsPage" />
+    <ShellContent Title="My Tools" ContentTemplate="{DataTemplate local:UserToolsPage}" Route="UserToolsPage" />
 
-        <!-- <ShellContent Title="Login" ContentTemplate="{DataTemplate local:LoginPage}" Route="LoginPage"/>
-    <ShellItem>
-        <ShellContent Title="Users" ContentTemplate="{DataTemplate local:UserPage}"/>
-    </ShellItem> -->
-       <ShellItem Route="LoginPage">
-        <ShellContent Title="Login" ContentTemplate="{DataTemplate local:LoginPage}" />
-    </ShellItem>
-
-    <ShellItem Route="UserPage">
-        <ShellContent Title="Users" ContentTemplate="{DataTemplate local:UserPage}" />
-    </ShellItem>
-
-
-    <!-- <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" /> -->
-       
-
+    <MenuItem Text="Logout"
+              Command="{Binding LogoutCommand}"
+              IconImageSource="logout.png"
+              StyleClass="MenuItemStyle"/>
 </Shell>
