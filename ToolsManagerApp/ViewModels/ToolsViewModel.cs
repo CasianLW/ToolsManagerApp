@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
 using ToolsManagerApp.Models;
 using ToolsManagerApp.Repositories;
+using ToolsManagerApp.Services;
 
 namespace ToolsManagerApp.ViewModels
 {
@@ -55,12 +56,9 @@ namespace ToolsManagerApp.ViewModels
                     NewToolName = value.Name;
                     NewToolDescription = value.Description;
                     NewToolQRCode = value.QRCode;
-                    NewToolCategory = Categories?.FirstOrDefault(c => c.Id == value.CategoryId);
-                    NewToolAssignedUser = Users?.FirstOrDefault(u => u.Id == value.UserAssignedId);
-                }
-                else
-                {
-                    ClearForm();
+                    NewToolCategory = Categories.FirstOrDefault(c => c.Id == value.CategoryId);
+                    NewToolAssignedUser = Users.FirstOrDefault(u => u.Id == value.UserAssignedId);
+                    NewToolStatus = value.Status;
                 }
             }
         }
@@ -100,6 +98,13 @@ namespace ToolsManagerApp.ViewModels
             set => SetProperty(ref _newToolAssignedUser, value);
         }
 
+        private StatusEnum _newToolStatus;
+        public StatusEnum NewToolStatus
+        {
+            get => _newToolStatus;
+            set => SetProperty(ref _newToolStatus, value);
+        }
+
         public IAsyncRelayCommand LoadToolsCommand { get; }
         public IAsyncRelayCommand AddToolCommand { get; }
         public IAsyncRelayCommand UpdateToolCommand { get; }
@@ -136,6 +141,8 @@ namespace ToolsManagerApp.ViewModels
                 {
                     NewToolCategory = Categories.First();
                 }
+                // Set default status if available
+                NewToolStatus = StatusEnum.Working;
             }
             catch (Exception ex)
             {
@@ -161,7 +168,7 @@ namespace ToolsManagerApp.ViewModels
                     CategoryId = NewToolCategory.Id,
                     QRCode = NewToolQRCode,
                     UserAssignedId = NewToolAssignedUser?.Id,
-                    Status = StatusEnum.Available
+                    Status = NewToolStatus
                 };
 
                 await _toolRepository.AddToolAsync(newTool);
@@ -174,7 +181,6 @@ namespace ToolsManagerApp.ViewModels
                 }
 
                 ClearForm();
-                UnselectTool();
             }
             catch (Exception ex)
             {
@@ -194,6 +200,7 @@ namespace ToolsManagerApp.ViewModels
                     SelectedTool.QRCode = NewToolQRCode;
                     SelectedTool.CategoryId = NewToolCategory.Id;
                     SelectedTool.UserAssignedId = NewToolAssignedUser?.Id;
+                    SelectedTool.Status = NewToolStatus;
 
                     await _toolRepository.UpdateToolAsync(SelectedTool);
 
@@ -211,7 +218,6 @@ namespace ToolsManagerApp.ViewModels
                     }
 
                     await LoadToolsAsync();
-                    UnselectTool();
                 }
             }
             catch (Exception ex)
@@ -238,7 +244,6 @@ namespace ToolsManagerApp.ViewModels
 
                     Tools.Remove(SelectedTool);
                     ClearForm();
-                    UnselectTool();
                 }
             }
             catch (Exception ex)
@@ -259,8 +264,9 @@ namespace ToolsManagerApp.ViewModels
             NewToolName = string.Empty;
             NewToolDescription = string.Empty;
             NewToolQRCode = string.Empty;
-            NewToolCategory = Categories?.FirstOrDefault();
+            NewToolCategory = Categories.FirstOrDefault();
             NewToolAssignedUser = null;
+            NewToolStatus = StatusEnum.Working;
         }
     }
 }
