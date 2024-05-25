@@ -11,6 +11,7 @@
     <ShellContent Title="Users" ContentTemplate="{DataTemplate local:UserPage}" Route="UserPage" />
     <ShellContent Title="Tools" ContentTemplate="{DataTemplate local:ToolsPage}" Route="ToolsPage" />
     <ShellContent Title="My Tools" ContentTemplate="{DataTemplate local:UserToolsPage}" Route="UserToolsPage" />
+    <ShellContent Title="Categories" ContentTemplate="{DataTemplate local:CategoriesPage}" Route="CategoriesPage" />
 
     <MenuItem Text="Logout"
               Command="{Binding LogoutCommand}"
