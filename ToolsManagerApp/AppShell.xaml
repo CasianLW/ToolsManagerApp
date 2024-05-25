@@ -9,9 +9,24 @@
     <!-- xmlns:local="clr-namespace:ToolsManagerApp" -->
 
 
-        <ShellItem>
-            <ShellContent Title="Users" ContentTemplate="{DataTemplate local:UserPage}"/>
-        </ShellItem>
+        <!-- <ShellItem>
+            <ShellContent Title="Login" ContentTemplate="{DataTemplate local:LoginPage}" Route="LoginPage" />
+            <ShellContent Title="Users" ContentTemplate="{DataTemplate local:UserPage}" Route="UserPage" />
+        </ShellItem> -->
+
+        <!-- <ShellContent Title="Login" ContentTemplate="{DataTemplate local:LoginPage}" Route="LoginPage"/>
+    <ShellItem>
+        <ShellContent Title="Users" ContentTemplate="{DataTemplate local:UserPage}"/>
+    </ShellItem> -->
+       <ShellItem Route="LoginPage">
+        <ShellContent Title="Login" ContentTemplate="{DataTemplate local:LoginPage}" />
+    </ShellItem>
+
+    <ShellItem Route="UserPage">
+        <ShellContent Title="Users" ContentTemplate="{DataTemplate local:UserPage}" />
+    </ShellItem>
+
+
     <!-- <ShellContent
         Title="Home"
         ContentTemplate="{DataTemplate local:MainPage}"
