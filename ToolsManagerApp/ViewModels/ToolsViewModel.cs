@@ -1,11 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ToolsManagerApp.Models;
-using ToolsManagerApp.Repositories;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using Microsoft.Maui.Controls;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls;
+using ToolsManagerApp.Models;
+using ToolsManagerApp.Repositories;
+using ToolsManagerApp.Services;
 
 namespace ToolsManagerApp.ViewModels
 {
@@ -15,7 +16,6 @@ namespace ToolsManagerApp.ViewModels
         private readonly ICategoryRepository _categoryRepository;
         private readonly ILogger<ToolsViewModel> _logger;
 
-        // Parameterless constructor for XAML usage
         public ToolsViewModel() { }
 
         public ToolsViewModel(IToolRepository toolRepository, ICategoryRepository categoryRepository, ILogger<ToolsViewModel> logger)
@@ -31,6 +31,8 @@ namespace ToolsManagerApp.ViewModels
 
             Tools = new ObservableCollection<Tool>();
             Categories = new ObservableCollection<Category>();
+
+            LoadToolsCommand.Execute(null);
         }
 
         public ObservableCollection<Tool> Tools { get; }
@@ -86,6 +88,12 @@ namespace ToolsManagerApp.ViewModels
                 {
                     Categories.Add(category);
                 }
+
+                // Set default category if available
+                if (Categories.Any())
+                {
+                    NewToolCategory = Categories.First();
+                }
             }
             catch (Exception ex)
             {
@@ -98,16 +106,26 @@ namespace ToolsManagerApp.ViewModels
         {
             try
             {
+                if (NewToolCategory == null)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error", "Please select a category", "OK");
+                    return;
+                }
+
                 var newTool = new Tool
                 {
                     Name = NewToolName,
                     Description = NewToolDescription,
-                    CategoryId = NewToolCategory.Id
+                    CategoryId = NewToolCategory.Id,
+                    Status = StatusEnum.Available
                 };
+
                 await _toolRepository.AddToolAsync(newTool);
                 Tools.Add(newTool);
+
                 NewToolName = string.Empty;
                 NewToolDescription = string.Empty;
+                NewToolCategory = Categories.FirstOrDefault();
             }
             catch (Exception ex)
             {
@@ -138,7 +156,7 @@ namespace ToolsManagerApp.ViewModels
             {
                 if (SelectedTool != null)
                 {
-                    await _toolRepository.DeleteToolAsync(SelectedTool.Id);
+                    await _toolRepository.DeleteToolAsync(SelectedTool.Id.ToString());
                     Tools.Remove(SelectedTool);
                 }
             }
