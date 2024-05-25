@@ -1,11 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ToolsManagerApp.Models;
-using ToolsManagerApp.Repositories;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using Microsoft.Maui.Controls;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls;
+using ToolsManagerApp.Models;
+using ToolsManagerApp.Repositories;
 
 namespace ToolsManagerApp.ViewModels
 {
@@ -14,7 +14,6 @@ namespace ToolsManagerApp.ViewModels
         private readonly IUserRepository _userRepository;
         private readonly ILogger<UsersViewModel> _logger;
 
-        // Parameterless constructor for XAML usage
         public UsersViewModel() { }
 
         public UsersViewModel(IUserRepository userRepository, ILogger<UsersViewModel> logger)
@@ -28,6 +27,9 @@ namespace ToolsManagerApp.ViewModels
             DeleteUserCommand = new AsyncRelayCommand(DeleteUserAsync);
 
             Users = new ObservableCollection<User>();
+
+            // Load users when the view model is initialized
+            LoadUsersCommand.Execute(null);
         }
 
         public ObservableCollection<User> Users { get; }
@@ -51,6 +53,13 @@ namespace ToolsManagerApp.ViewModels
         {
             get => _newUserEmail;
             set => SetProperty(ref _newUserEmail, value);
+        }
+
+        private string _newUserPassword;
+        public string NewUserPassword
+        {
+            get => _newUserPassword;
+            set => SetProperty(ref _newUserPassword, value);
         }
 
         public IAsyncRelayCommand LoadUsersCommand { get; }
@@ -80,11 +89,12 @@ namespace ToolsManagerApp.ViewModels
         {
             try
             {
-                var newUser = new User { Name = NewUserName, Email = NewUserEmail };
+                var newUser = new User { Name = NewUserName, Email = NewUserEmail, Password = NewUserPassword };
                 await _userRepository.AddUserAsync(newUser);
                 Users.Add(newUser);
                 NewUserName = string.Empty;
                 NewUserEmail = string.Empty;
+                NewUserPassword = string.Empty;
             }
             catch (Exception ex)
             {
