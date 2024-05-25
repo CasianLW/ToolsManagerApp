@@ -42,7 +42,16 @@ namespace ToolsManagerApp.ViewModels
         public Tool SelectedTool
         {
             get => _selectedTool;
-            set => SetProperty(ref _selectedTool, value);
+            set
+            {
+                SetProperty(ref _selectedTool, value);
+                if (value != null)
+                {
+                    NewToolName = value.Name;
+                    NewToolDescription = value.Description;
+                    NewToolCategory = Categories.FirstOrDefault(c => c.Id == value.CategoryId);
+                }
+            }
         }
 
         private string _newToolName;
@@ -140,7 +149,12 @@ namespace ToolsManagerApp.ViewModels
             {
                 if (SelectedTool != null)
                 {
+                    SelectedTool.Name = NewToolName;
+                    SelectedTool.Description = NewToolDescription;
+                    SelectedTool.CategoryId = NewToolCategory.Id;
+
                     await _toolRepository.UpdateToolAsync(SelectedTool);
+                    await LoadToolsAsync(); // Reload tools after update
                 }
             }
             catch (Exception ex)
@@ -158,6 +172,7 @@ namespace ToolsManagerApp.ViewModels
                 {
                     await _toolRepository.DeleteToolAsync(SelectedTool.Id.ToString());
                     Tools.Remove(SelectedTool);
+                    await LoadToolsAsync(); // Reload tools after delete
                 }
             }
             catch (Exception ex)
