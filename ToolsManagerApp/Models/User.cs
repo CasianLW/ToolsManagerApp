@@ -13,6 +13,8 @@ namespace ToolsManagerApp.Models
         public RoleEnum Role { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
+        public List<string> AssignedToolIds { get; set; } = new List<string>();
+
 
         public void Authenticate() { /* Implementation */ }
         public void ChangePassword(string newPassword) { Password = newPassword; }
