@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ToolsManagerApp.ViewModels"
              xmlns:conv="clr-namespace:ToolsManagerApp.Converters"
+             xmlns:local="clr-namespace:ToolsManagerApp"
              x:Class="ToolsManagerApp.Views.ToolsPage"
              Title="Tools">
 
@@ -31,7 +32,7 @@
         <Entry Placeholder="QR Code" Text="{Binding NewToolQRCode}" />
         <Picker Title="Category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding NewToolCategory}" />
         <Picker Title="Assigned User" ItemsSource="{Binding Users}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding NewToolAssignedUser}" />
-        <Picker Title="Status" ItemsSource="{Binding ToolStatuses}" SelectedItem="{Binding NewToolStatus}" />
+        <Picker Title="Status" ItemsSource="{Binding Statuses}" SelectedItem="{Binding NewToolStatus}" />
 
         <Button Text="Add Tool" Command="{Binding AddToolCommand}" />
         <Button Text="Update Tool" Command="{Binding UpdateToolCommand}" IsEnabled="{Binding SelectedTool, Converter={StaticResource NullToFalseConverter}}" />
