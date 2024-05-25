@@ -26,6 +26,7 @@ namespace ToolsManagerApp.ViewModels
             AddUserCommand = new AsyncRelayCommand(AddUserAsync);
             UpdateUserCommand = new AsyncRelayCommand(UpdateUserAsync);
             DeleteUserCommand = new AsyncRelayCommand(DeleteUserAsync);
+            UnselectUserCommand = new RelayCommand(UnselectUser);
 
             Users = new ObservableCollection<User>();
 
@@ -74,6 +75,7 @@ namespace ToolsManagerApp.ViewModels
         public IAsyncRelayCommand AddUserCommand { get; }
         public IAsyncRelayCommand UpdateUserCommand { get; }
         public IAsyncRelayCommand DeleteUserCommand { get; }
+        public IRelayCommand UnselectUserCommand { get; }
 
         private async Task LoadUsersAsync()
         {
@@ -108,9 +110,7 @@ namespace ToolsManagerApp.ViewModels
                 await _userRepository.AddUserAsync(newUser);
                 Users.Add(newUser);
 
-                NewUserName = string.Empty;
-                NewUserEmail = string.Empty;
-                NewUserPassword = string.Empty;
+                ClearForm();
             }
             catch (Exception ex)
             {
@@ -130,6 +130,7 @@ namespace ToolsManagerApp.ViewModels
 
                     await _userRepository.UpdateUserAsync(SelectedUser);
                     await LoadUsersAsync(); // Reload users after update
+                    UnselectUser();
                 }
             }
             catch (Exception ex)
@@ -148,6 +149,7 @@ namespace ToolsManagerApp.ViewModels
                     await _userRepository.DeleteUserAsync(SelectedUser.Id.ToString());
                     Users.Remove(SelectedUser);
                     await LoadUsersAsync(); // Reload users after delete
+                    UnselectUser();
                 }
             }
             catch (Exception ex)
@@ -155,6 +157,19 @@ namespace ToolsManagerApp.ViewModels
                 _logger.LogError(ex, "Failed to delete user");
                 await Application.Current.MainPage.DisplayAlert("Error", "Failed to delete user", "OK");
             }
+        }
+
+        private void UnselectUser()
+        {
+            SelectedUser = null;
+            ClearForm();
+        }
+
+        private void ClearForm()
+        {
+            NewUserName = string.Empty;
+            NewUserEmail = string.Empty;
+            NewUserPassword = string.Empty;
         }
     }
 }
