@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
 using ToolsManagerApp.Models;
 using ToolsManagerApp.Repositories;
+using ToolsManagerApp.Services;
 
 namespace ToolsManagerApp.ViewModels
 {
@@ -28,7 +29,6 @@ namespace ToolsManagerApp.ViewModels
 
             Users = new ObservableCollection<User>();
 
-            // Load users when the view model is initialized
             LoadUsersCommand.Execute(null);
         }
 
@@ -38,7 +38,15 @@ namespace ToolsManagerApp.ViewModels
         public User SelectedUser
         {
             get => _selectedUser;
-            set => SetProperty(ref _selectedUser, value);
+            set
+            {
+                SetProperty(ref _selectedUser, value);
+                if (value != null)
+                {
+                    NewUserName = value.Name;
+                    NewUserEmail = value.Email;
+                }
+            }
         }
 
         private string _newUserName;
@@ -89,9 +97,17 @@ namespace ToolsManagerApp.ViewModels
         {
             try
             {
-                var newUser = new User { Name = NewUserName, Email = NewUserEmail, Password = NewUserPassword };
+                var newUser = new User
+                {
+                    Name = NewUserName,
+                    Email = NewUserEmail,
+                    Password = NewUserPassword,
+                    Role = RoleEnum.Employee // Default role, you can modify this if needed
+                };
+
                 await _userRepository.AddUserAsync(newUser);
                 Users.Add(newUser);
+
                 NewUserName = string.Empty;
                 NewUserEmail = string.Empty;
                 NewUserPassword = string.Empty;
@@ -109,7 +125,11 @@ namespace ToolsManagerApp.ViewModels
             {
                 if (SelectedUser != null)
                 {
+                    SelectedUser.Name = NewUserName;
+                    SelectedUser.Email = NewUserEmail;
+
                     await _userRepository.UpdateUserAsync(SelectedUser);
+                    await LoadUsersAsync(); // Reload users after update
                 }
             }
             catch (Exception ex)
@@ -127,6 +147,7 @@ namespace ToolsManagerApp.ViewModels
                 {
                     await _userRepository.DeleteUserAsync(SelectedUser.Id.ToString());
                     Users.Remove(SelectedUser);
+                    await LoadUsersAsync(); // Reload users after delete
                 }
             }
             catch (Exception ex)
