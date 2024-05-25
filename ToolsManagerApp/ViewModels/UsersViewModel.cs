@@ -6,7 +6,6 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
 
 namespace ToolsManagerApp.ViewModels
 {
@@ -15,9 +14,8 @@ namespace ToolsManagerApp.ViewModels
         private readonly IUserRepository _userRepository;
         private readonly ILogger<UsersViewModel> _logger;
 
-        public UsersViewModel()
-        {
-        }
+        // Parameterless constructor for XAML usage
+        public UsersViewModel() { }
 
         public UsersViewModel(IUserRepository userRepository, ILogger<UsersViewModel> logger)
         {
@@ -55,13 +53,6 @@ namespace ToolsManagerApp.ViewModels
             set => SetProperty(ref _newUserEmail, value);
         }
 
-        private string _newUserPassword;
-        public string NewUserPassword
-        {
-            get => _newUserPassword;
-            set => SetProperty(ref _newUserPassword, value);
-        }
-
         public IAsyncRelayCommand LoadUsersCommand { get; }
         public IAsyncRelayCommand AddUserCommand { get; }
         public IAsyncRelayCommand UpdateUserCommand { get; }
@@ -89,18 +80,11 @@ namespace ToolsManagerApp.ViewModels
         {
             try
             {
-                var newUser = new User
-                {
-                    Name = NewUserName,
-                    Email = NewUserEmail,
-                    Password = NewUserPassword,
-                    Role = RoleEnum.Employee
-                };
+                var newUser = new User { Name = NewUserName, Email = NewUserEmail };
                 await _userRepository.AddUserAsync(newUser);
                 Users.Add(newUser);
                 NewUserName = string.Empty;
                 NewUserEmail = string.Empty;
-                NewUserPassword = string.Empty;
             }
             catch (Exception ex)
             {
@@ -131,7 +115,7 @@ namespace ToolsManagerApp.ViewModels
             {
                 if (SelectedUser != null)
                 {
-                    await _userRepository.DeleteUserAsync(SelectedUser.Id);
+                    await _userRepository.DeleteUserAsync(SelectedUser.Id.ToString());
                     Users.Remove(SelectedUser);
                 }
             }
