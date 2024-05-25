@@ -1,12 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
 using ToolsManagerApp.Models;
 using ToolsManagerApp.Repositories;
-using ToolsManagerApp.Services;
 
 namespace ToolsManagerApp.ViewModels
 {
@@ -14,29 +14,34 @@ namespace ToolsManagerApp.ViewModels
     {
         private readonly IToolRepository _toolRepository;
         private readonly ICategoryRepository _categoryRepository;
+        private readonly IUserRepository _userRepository;
         private readonly ILogger<ToolsViewModel> _logger;
 
         public ToolsViewModel() { }
 
-        public ToolsViewModel(IToolRepository toolRepository, ICategoryRepository categoryRepository, ILogger<ToolsViewModel> logger)
+        public ToolsViewModel(IToolRepository toolRepository, ICategoryRepository categoryRepository, IUserRepository userRepository, ILogger<ToolsViewModel> logger)
         {
             _toolRepository = toolRepository;
             _categoryRepository = categoryRepository;
+            _userRepository = userRepository;
             _logger = logger;
 
             LoadToolsCommand = new AsyncRelayCommand(LoadToolsAsync);
             AddToolCommand = new AsyncRelayCommand(AddToolAsync);
             UpdateToolCommand = new AsyncRelayCommand(UpdateToolAsync);
             DeleteToolCommand = new AsyncRelayCommand(DeleteToolAsync);
+            UnselectToolCommand = new RelayCommand(UnselectTool);
 
             Tools = new ObservableCollection<Tool>();
             Categories = new ObservableCollection<Category>();
+            Users = new ObservableCollection<User>();
 
             LoadToolsCommand.Execute(null);
         }
 
         public ObservableCollection<Tool> Tools { get; }
         public ObservableCollection<Category> Categories { get; }
+        public ObservableCollection<User> Users { get; }
 
         private Tool _selectedTool;
         public Tool SelectedTool
@@ -49,7 +54,13 @@ namespace ToolsManagerApp.ViewModels
                 {
                     NewToolName = value.Name;
                     NewToolDescription = value.Description;
-                    NewToolCategory = Categories.FirstOrDefault(c => c.Id == value.CategoryId);
+                    NewToolQRCode = value.QRCode;
+                    NewToolCategory = Categories?.FirstOrDefault(c => c.Id == value.CategoryId);
+                    NewToolAssignedUser = Users?.FirstOrDefault(u => u.Id == value.UserAssignedId);
+                }
+                else
+                {
+                    ClearForm();
                 }
             }
         }
@@ -68,6 +79,13 @@ namespace ToolsManagerApp.ViewModels
             set => SetProperty(ref _newToolDescription, value);
         }
 
+        private string _newToolQRCode;
+        public string NewToolQRCode
+        {
+            get => _newToolQRCode;
+            set => SetProperty(ref _newToolQRCode, value);
+        }
+
         private Category _newToolCategory;
         public Category NewToolCategory
         {
@@ -75,10 +93,18 @@ namespace ToolsManagerApp.ViewModels
             set => SetProperty(ref _newToolCategory, value);
         }
 
+        private User _newToolAssignedUser;
+        public User NewToolAssignedUser
+        {
+            get => _newToolAssignedUser;
+            set => SetProperty(ref _newToolAssignedUser, value);
+        }
+
         public IAsyncRelayCommand LoadToolsCommand { get; }
         public IAsyncRelayCommand AddToolCommand { get; }
         public IAsyncRelayCommand UpdateToolCommand { get; }
         public IAsyncRelayCommand DeleteToolCommand { get; }
+        public IRelayCommand UnselectToolCommand { get; }
 
         private async Task LoadToolsAsync()
         {
@@ -96,6 +122,13 @@ namespace ToolsManagerApp.ViewModels
                 foreach (var category in categories)
                 {
                     Categories.Add(category);
+                }
+
+                Users.Clear();
+                var users = await _userRepository.GetAllUsersAsync();
+                foreach (var user in users)
+                {
+                    Users.Add(user);
                 }
 
                 // Set default category if available
@@ -126,15 +159,22 @@ namespace ToolsManagerApp.ViewModels
                     Name = NewToolName,
                     Description = NewToolDescription,
                     CategoryId = NewToolCategory.Id,
+                    QRCode = NewToolQRCode,
+                    UserAssignedId = NewToolAssignedUser?.Id,
                     Status = StatusEnum.Available
                 };
 
                 await _toolRepository.AddToolAsync(newTool);
                 Tools.Add(newTool);
 
-                NewToolName = string.Empty;
-                NewToolDescription = string.Empty;
-                NewToolCategory = Categories.FirstOrDefault();
+                if (NewToolAssignedUser != null)
+                {
+                    NewToolAssignedUser.AssignedToolIds.Add(newTool.Id);
+                    await _userRepository.UpdateUserAsync(NewToolAssignedUser);
+                }
+
+                ClearForm();
+                UnselectTool();
             }
             catch (Exception ex)
             {
@@ -151,10 +191,27 @@ namespace ToolsManagerApp.ViewModels
                 {
                     SelectedTool.Name = NewToolName;
                     SelectedTool.Description = NewToolDescription;
+                    SelectedTool.QRCode = NewToolQRCode;
                     SelectedTool.CategoryId = NewToolCategory.Id;
+                    SelectedTool.UserAssignedId = NewToolAssignedUser?.Id;
 
                     await _toolRepository.UpdateToolAsync(SelectedTool);
-                    await LoadToolsAsync(); // Reload tools after update
+
+                    var previousUser = Users.FirstOrDefault(u => u.AssignedToolIds.Contains(SelectedTool.Id));
+                    if (previousUser != null && previousUser.Id != NewToolAssignedUser?.Id)
+                    {
+                        previousUser.AssignedToolIds.Remove(SelectedTool.Id);
+                        await _userRepository.UpdateUserAsync(previousUser);
+                    }
+
+                    if (NewToolAssignedUser != null && !NewToolAssignedUser.AssignedToolIds.Contains(SelectedTool.Id))
+                    {
+                        NewToolAssignedUser.AssignedToolIds.Add(SelectedTool.Id);
+                        await _userRepository.UpdateUserAsync(NewToolAssignedUser);
+                    }
+
+                    await LoadToolsAsync();
+                    UnselectTool();
                 }
             }
             catch (Exception ex)
@@ -170,9 +227,18 @@ namespace ToolsManagerApp.ViewModels
             {
                 if (SelectedTool != null)
                 {
-                    await _toolRepository.DeleteToolAsync(SelectedTool.Id.ToString());
+                    await _toolRepository.DeleteToolAsync(SelectedTool.Id);
+
+                    var user = Users.FirstOrDefault(u => u.AssignedToolIds.Contains(SelectedTool.Id));
+                    if (user != null)
+                    {
+                        user.AssignedToolIds.Remove(SelectedTool.Id);
+                        await _userRepository.UpdateUserAsync(user);
+                    }
+
                     Tools.Remove(SelectedTool);
-                    await LoadToolsAsync(); // Reload tools after delete
+                    ClearForm();
+                    UnselectTool();
                 }
             }
             catch (Exception ex)
@@ -180,6 +246,21 @@ namespace ToolsManagerApp.ViewModels
                 _logger.LogError(ex, "Failed to delete tool");
                 await Application.Current.MainPage.DisplayAlert("Error", "Failed to delete tool", "OK");
             }
+        }
+
+        private void UnselectTool()
+        {
+            SelectedTool = null;
+            ClearForm();
+        }
+
+        private void ClearForm()
+        {
+            NewToolName = string.Empty;
+            NewToolDescription = string.Empty;
+            NewToolQRCode = string.Empty;
+            NewToolCategory = Categories?.FirstOrDefault();
+            NewToolAssignedUser = null;
         }
     }
 }
