@@ -144,6 +144,7 @@ namespace ToolsManagerApp
             services.AddTransient<UsersViewModel>();
             services.AddTransient<ToolsViewModel>();
             services.AddTransient<UserToolsViewModel>();
+            services.AddTransient<CategoriesViewModel>();
         }
 
         private async Task SeedDatabase()
