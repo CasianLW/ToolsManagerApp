@@ -33,6 +33,11 @@ namespace ToolsManagerApp.Repositories
             return await _users.Find<User>(user => user.Email == email && user.Password == password).FirstOrDefaultAsync();
         }
 
+        public async Task<User> GetUserByEmailAsync(string email)
+        {
+            return await _users.Find<User>(user => user.Email == email).FirstOrDefaultAsync();
+        }
+
         public async Task AddUserAsync(User user)
         {
             await _users.InsertOneAsync(user);
