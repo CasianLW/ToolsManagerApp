@@ -20,6 +20,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(UserPage), typeof(UserPage));
         Routing.RegisterRoute(nameof(ToolsPage), typeof(ToolsPage));
         Routing.RegisterRoute(nameof(UserToolsPage), typeof(UserToolsPage));
+        Routing.RegisterRoute(nameof(CategoriesPage), typeof(CategoriesPage));
 
         LogoutCommand = new AsyncRelayCommand(OnLogoutAsync);
         BindingContext = this;
