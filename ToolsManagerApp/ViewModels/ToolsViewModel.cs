@@ -36,6 +36,7 @@ namespace ToolsManagerApp.ViewModels
             Tools = new ObservableCollection<Tool>();
             Categories = new ObservableCollection<Category>();
             Users = new ObservableCollection<User>();
+            Statuses = new ObservableCollection<StatusEnum>(Enum.GetValues(typeof(StatusEnum)).Cast<StatusEnum>());
 
             LoadToolsCommand.Execute(null);
         }
@@ -43,6 +44,7 @@ namespace ToolsManagerApp.ViewModels
         public ObservableCollection<Tool> Tools { get; }
         public ObservableCollection<Category> Categories { get; }
         public ObservableCollection<User> Users { get; }
+        public ObservableCollection<StatusEnum> Statuses { get; }
 
         private Tool _selectedTool;
         public Tool SelectedTool
@@ -141,7 +143,8 @@ namespace ToolsManagerApp.ViewModels
                 {
                     NewToolCategory = Categories.First();
                 }
-                // Set default status if available
+
+                // Set default status
                 NewToolStatus = StatusEnum.Working;
             }
             catch (Exception ex)
@@ -218,6 +221,7 @@ namespace ToolsManagerApp.ViewModels
                     }
 
                     await LoadToolsAsync();
+                    UnselectTool();
                 }
             }
             catch (Exception ex)
@@ -244,6 +248,7 @@ namespace ToolsManagerApp.ViewModels
 
                     Tools.Remove(SelectedTool);
                     ClearForm();
+                    UnselectTool();
                 }
             }
             catch (Exception ex)
