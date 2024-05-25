@@ -24,9 +24,14 @@
             </ListView.ItemTemplate>
         </ListView>
 
+        <Button Text="Unselect Tool" Command="{Binding UnselectToolCommand}" IsVisible="{Binding SelectedTool, Converter={StaticResource NullToFalseConverter}}" />
+
         <Entry Placeholder="Tool Name" Text="{Binding NewToolName}" />
         <Entry Placeholder="Tool Description" Text="{Binding NewToolDescription}" />
+        <Entry Placeholder="QR Code" Text="{Binding NewToolQRCode}" />
         <Picker Title="Category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding NewToolCategory}" />
+        <Picker Title="Assigned User" ItemsSource="{Binding Users}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding NewToolAssignedUser}" />
+        <Picker Title="Status" ItemsSource="{Binding ToolStatuses}" SelectedItem="{Binding NewToolStatus}" />
 
         <Button Text="Add Tool" Command="{Binding AddToolCommand}" />
         <Button Text="Update Tool" Command="{Binding UpdateToolCommand}" IsEnabled="{Binding SelectedTool, Converter={StaticResource NullToFalseConverter}}" />
