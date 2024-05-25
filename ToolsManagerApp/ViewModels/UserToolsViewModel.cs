@@ -16,6 +16,8 @@ namespace ToolsManagerApp.ViewModels
         private readonly ILogger<UserToolsViewModel> _logger;
         private readonly IUserRepository _userRepository;
 
+        public UserToolsViewModel() { }
+
         public UserToolsViewModel(IToolRepository toolRepository, ILogger<UserToolsViewModel> logger, IUserRepository userRepository)
         {
             _toolRepository = toolRepository;
@@ -24,9 +26,6 @@ namespace ToolsManagerApp.ViewModels
 
             LoadUserToolsCommand = new AsyncRelayCommand(LoadUserToolsAsync);
             Tools = new ObservableCollection<Tool>();
-
-            // Load user tools when the view model is initialized
-            LoadUserToolsCommand.Execute(null);
         }
 
         public ObservableCollection<Tool> Tools { get; }
