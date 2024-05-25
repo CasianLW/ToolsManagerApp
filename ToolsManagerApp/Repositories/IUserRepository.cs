@@ -9,6 +9,8 @@ namespace ToolsManagerApp.Repositories
         Task<IEnumerable<User>> GetAllUsersAsync();
         Task<User> GetUserByIdAsync(string id);
         Task<User> GetUserByEmailAndPasswordAsync(string email, string password);
+        Task<User> GetUserByEmailAsync(string email);
+
         Task AddUserAsync(User user);
         Task UpdateUserAsync(User user);
         Task DeleteUserAsync(string id);
