@@ -3,6 +3,6 @@
     public enum RoleEnum
     {
         Admin,
-        Employee
+        Employee,
     }
 }
