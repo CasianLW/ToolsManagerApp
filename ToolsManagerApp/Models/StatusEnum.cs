@@ -2,8 +2,7 @@
 {
     public enum StatusEnum
     {
-        Available,
-        InUse,
+        Working,
         Maintenance,
         Stolen,
         Broken,
