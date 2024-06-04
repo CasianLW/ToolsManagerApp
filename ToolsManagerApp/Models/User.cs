@@ -26,4 +26,6 @@ namespace ToolsManagerApp.Models
             Email = email;
         }
     }
+    // admin extends user + role admin + methodes de l'admin
+    // user extends user + role user + methodes de l'user
 }
