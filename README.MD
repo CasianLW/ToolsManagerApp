@@ -45,19 +45,30 @@ ToolsManagerApp is a comprehensive tool management application designed to strea
    ToolsManagerApp/
    │
    ├── Models/
-   │ ├── Category.cs
-   │
-   ├── ViewModels/
-   │ ├── UsersViewModel.cs
-   │ ├── CategoriesViewModel.cs
-   │
-   ├── Views/
-   │ ├── CategoriesPage.xaml
-   │ ├── CategoriesPage.xaml.cs
+   │   ├── Category.cs
+   │   ├── Consumable.cs
+   │   ├── MongoDBSettings.cs
+   │   ├── RoleEnum.cs
+   │   ├── StatusEnum.cs
+   │   ├── StringToBoolConverter.cs
+   │   ├── Tool.cs
+   │   ├── User.cs
    │
    ├── Repositories/
-   │ ├── ICategoryRepository.cs
-   │ └── CategoryRepository.cs
+   │   ├── CategoryRepository.cs
+   │   ├── ICategoryRepository.cs
+   │   ├── IToolRepository.cs
+   │   ├── IUserRepository.cs
+   │   ├── ToolRepository.cs
+   │   ├── UserRepository.cs
+   │
+   ├── ViewModels/
+   │   ├── CategoriesViewModel.cs
+   │   ├── LoginViewModel.cs
+   │   ├── ToolsViewModel.cs
+   │   ├── UsersViewModel.cs
+   │   ├── UserToolsViewModel.cs
+   │   ├── UserViewModel.cs
    ```
    \*This version is structured for clarity and readability, making it easy for others to understand the project organization and MVVM pattern.
 
