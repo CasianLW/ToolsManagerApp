@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
 using ToolsManagerApp.Models;
 using ToolsManagerApp.Repositories;
-using ToolsManagerApp.Services;
 
 namespace ToolsManagerApp.ViewModels
 {
@@ -18,6 +17,31 @@ namespace ToolsManagerApp.ViewModels
         private readonly IUserRepository _userRepository;
         private readonly ILogger<ToolsViewModel> _logger;
 
+        private ObservableCollection<object> _items;
+        private object _selectedItem;
+        private string _selectedType;
+
+        public ObservableCollection<string> Types { get; } = new ObservableCollection<string> { "Tool", "Consumable" };
+
+        public ObservableCollection<object> Items
+        {
+            get => _items;
+            private set => SetProperty(ref _items, value);
+        }
+
+        public string SelectedType
+        {
+            get => _selectedType;
+            set
+            {
+                SetProperty(ref _selectedType, value);
+                OnPropertyChanged(nameof(IsConsumableSelected));
+                _ = LoadItemsAsync(); // Trigger UI updates and refresh list
+            }
+        }
+
+        public bool IsConsumableSelected => SelectedType == "Consumable";
+
         public ToolsViewModel() { }
 
         public ToolsViewModel(IToolRepository toolRepository, ICategoryRepository categoryRepository, IUserRepository userRepository, ILogger<ToolsViewModel> logger)
@@ -27,101 +51,25 @@ namespace ToolsManagerApp.ViewModels
             _userRepository = userRepository;
             _logger = logger;
 
-            LoadToolsCommand = new AsyncRelayCommand(LoadToolsAsync);
-            AddToolCommand = new AsyncRelayCommand(AddToolAsync);
-            UpdateToolCommand = new AsyncRelayCommand(UpdateToolAsync);
-            DeleteToolCommand = new AsyncRelayCommand(DeleteToolAsync);
-            UnselectToolCommand = new RelayCommand(UnselectTool);
+            Items = new ObservableCollection<object>();
+            SelectedType = "Tool"; // Default to showing tools
 
-            Tools = new ObservableCollection<Tool>();
-            Categories = new ObservableCollection<Category>();
-            Users = new ObservableCollection<User>();
-            Statuses = new ObservableCollection<StatusEnum>(Enum.GetValues(typeof(StatusEnum)).Cast<StatusEnum>());
-
-            LoadToolsCommand.Execute(null);
+            LoadItemsAsync().ConfigureAwait(false);
         }
 
-        public ObservableCollection<Tool> Tools { get; }
-        public ObservableCollection<Category> Categories { get; }
-        public ObservableCollection<User> Users { get; }
-        public ObservableCollection<StatusEnum> Statuses { get; }
-
-        private Tool _selectedTool;
-        public Tool SelectedTool
-        {
-            get => _selectedTool;
-            set
-            {
-                SetProperty(ref _selectedTool, value);
-                if (value != null)
-                {
-                    NewToolName = value.Name;
-                    NewToolDescription = value.Description;
-                    NewToolQRCode = value.QRCode;
-                    NewToolCategory = Categories.FirstOrDefault(c => c.Id == value.CategoryId);
-                    NewToolAssignedUser = Users.FirstOrDefault(u => u.Id == value.UserAssignedId);
-                    NewToolStatus = value.Status;
-                }
-            }
-        }
-
-        private string _newToolName;
-        public string NewToolName
-        {
-            get => _newToolName;
-            set => SetProperty(ref _newToolName, value);
-        }
-
-        private string _newToolDescription;
-        public string NewToolDescription
-        {
-            get => _newToolDescription;
-            set => SetProperty(ref _newToolDescription, value);
-        }
-
-        private string _newToolQRCode;
-        public string NewToolQRCode
-        {
-            get => _newToolQRCode;
-            set => SetProperty(ref _newToolQRCode, value);
-        }
-
-        private Category _newToolCategory;
-        public Category NewToolCategory
-        {
-            get => _newToolCategory;
-            set => SetProperty(ref _newToolCategory, value);
-        }
-
-        private User _newToolAssignedUser;
-        public User NewToolAssignedUser
-        {
-            get => _newToolAssignedUser;
-            set => SetProperty(ref _newToolAssignedUser, value);
-        }
-
-        private StatusEnum _newToolStatus;
-        public StatusEnum NewToolStatus
-        {
-            get => _newToolStatus;
-            set => SetProperty(ref _newToolStatus, value);
-        }
-
-        public IAsyncRelayCommand LoadToolsCommand { get; }
-        public IAsyncRelayCommand AddToolCommand { get; }
-        public IAsyncRelayCommand UpdateToolCommand { get; }
-        public IAsyncRelayCommand DeleteToolCommand { get; }
-        public IRelayCommand UnselectToolCommand { get; }
-
-        private async Task LoadToolsAsync()
+        private async Task LoadItemsAsync()
         {
             try
             {
-                Tools.Clear();
-                var tools = await _toolRepository.GetAllToolsAsync();
-                foreach (var tool in tools)
+                if (IsConsumableSelected)
                 {
-                    Tools.Add(tool);
+                    var consumables = await _toolRepository.GetAllConsumablesAsync();
+                    Items = new ObservableCollection<object>(consumables);
+                }
+                else
+                {
+                    var tools = await _toolRepository.GetAllToolsAsync();
+                    Items = new ObservableCollection<object>(tools);
                 }
 
                 Categories.Clear();
@@ -138,140 +86,306 @@ namespace ToolsManagerApp.ViewModels
                     Users.Add(user);
                 }
 
-                // Set default category if available
                 if (Categories.Any())
                 {
-                    NewToolCategory = Categories.First();
+                    NewCategory = Categories.First();
                 }
 
-                // Set default status
-                NewToolStatus = StatusEnum.Working;
+                NewStatus = StatusEnum.Working;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to load tools");
-                await Application.Current.MainPage.DisplayAlert("Error", "Failed to load tools", "OK");
+                _logger.LogError(ex, "Failed to load items");
+                await Application.Current.MainPage.DisplayAlert("Error", "Failed to load items", "OK");
             }
         }
 
-        private async Task AddToolAsync()
+        public IAsyncRelayCommand LoadItemsCommand => new AsyncRelayCommand(LoadItemsAsync);
+        public IAsyncRelayCommand AddItemCommand => new AsyncRelayCommand(AddItemAsync);
+        public IAsyncRelayCommand UpdateItemCommand => new AsyncRelayCommand(UpdateItemAsync);
+        public IAsyncRelayCommand DeleteItemCommand => new AsyncRelayCommand(DeleteItemAsync);
+        public IRelayCommand UnselectItemCommand => new RelayCommand(UnselectItem);
+
+        private async Task AddItemAsync()
         {
             try
             {
-                if (NewToolCategory == null)
+                if (NewCategory == null)
                 {
                     await Application.Current.MainPage.DisplayAlert("Error", "Please select a category", "OK");
                     return;
                 }
 
-                var newTool = new Tool
+                if (IsConsumableSelected)
                 {
-                    Name = NewToolName,
-                    Description = NewToolDescription,
-                    CategoryId = NewToolCategory.Id,
-                    QRCode = NewToolQRCode,
-                    UserAssignedId = NewToolAssignedUser?.Id,
-                    Status = NewToolStatus
-                };
+                    var newConsumable = new Consumable
+                    {
+                        Name = NewName,
+                        Description = NewDescription,
+                        CategoryId = NewCategory.Id,
+                        QRCode = NewQRCode,
+                        UserAssignedId = NewAssignedUser?.Id,
+                        Status = NewStatus,
+                        InitialValue = NewInitialValue,
+                        MaxValue = NewMaxValue,
+                        CurrentValue = NewCurrentValue
+                    };
 
-                await _toolRepository.AddToolAsync(newTool);
-                Tools.Add(newTool);
-
-                if (NewToolAssignedUser != null)
+                    await _toolRepository.AddConsumableAsync(newConsumable);
+                    Items.Add(newConsumable);
+                }
+                else
                 {
-                    NewToolAssignedUser.AssignedToolIds.Add(newTool.Id);
-                    await _userRepository.UpdateUserAsync(NewToolAssignedUser);
+                    var newTool = new Tool
+                    {
+                        Name = NewName,
+                        Description = NewDescription,
+                        CategoryId = NewCategory.Id,
+                        QRCode = NewQRCode,
+                        UserAssignedId = NewAssignedUser?.Id,
+                        Status = NewStatus
+                    };
+
+                    await _toolRepository.AddToolAsync(newTool);
+                    Items.Add(newTool);
+                }
+
+                if (NewAssignedUser != null)
+                {
+                    NewAssignedUser.AssignedToolIds.Add(((Tool)SelectedItem).Id);
+                    await _userRepository.UpdateUserAsync(NewAssignedUser);
                 }
 
                 ClearForm();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to add tool");
-                await Application.Current.MainPage.DisplayAlert("Error", "Failed to add tool", "OK");
+                _logger.LogError(ex, "Failed to add item");
+                // await Application.Current.MainPage.DisplayAlert("Error", "Failed to add item", "OK");
             }
         }
 
-        private async Task UpdateToolAsync()
+        private async Task UpdateItemAsync()
         {
             try
             {
-                if (SelectedTool != null)
+                if (SelectedItem != null)
                 {
-                    SelectedTool.Name = NewToolName;
-                    SelectedTool.Description = NewToolDescription;
-                    SelectedTool.QRCode = NewToolQRCode;
-                    SelectedTool.CategoryId = NewToolCategory.Id;
-                    SelectedTool.UserAssignedId = NewToolAssignedUser?.Id;
-                    SelectedTool.Status = NewToolStatus;
+                    string selectedItemId = null;
 
-                    await _toolRepository.UpdateToolAsync(SelectedTool);
-
-                    var previousUser = Users.FirstOrDefault(u => u.AssignedToolIds.Contains(SelectedTool.Id));
-                    if (previousUser != null && previousUser.Id != NewToolAssignedUser?.Id)
+                    if (SelectedItem is Consumable consumable)
                     {
-                        previousUser.AssignedToolIds.Remove(SelectedTool.Id);
-                        await _userRepository.UpdateUserAsync(previousUser);
+                        consumable.Name = NewName;
+                        consumable.Description = NewDescription;
+                        consumable.QRCode = NewQRCode;
+                        consumable.CategoryId = NewCategory.Id;
+                        consumable.UserAssignedId = NewAssignedUser?.Id;
+                        consumable.Status = NewStatus;
+                        consumable.InitialValue = NewInitialValue;
+                        consumable.MaxValue = NewMaxValue;
+                        consumable.CurrentValue = NewCurrentValue;
+
+                        await _toolRepository.UpdateConsumableAsync(consumable);
+                        selectedItemId = consumable.Id;
+                    }
+                    else if (SelectedItem is Tool tool)
+                    {
+                        tool.Name = NewName;
+                        tool.Description = NewDescription;
+                        tool.QRCode = NewQRCode;
+                        tool.CategoryId = NewCategory.Id;
+                        tool.UserAssignedId = NewAssignedUser?.Id;
+                        tool.Status = NewStatus;
+
+                        await _toolRepository.UpdateToolAsync(tool);
+                        selectedItemId = tool.Id;
                     }
 
-                    if (NewToolAssignedUser != null && !NewToolAssignedUser.AssignedToolIds.Contains(SelectedTool.Id))
+                    if (selectedItemId != null)
                     {
-                        NewToolAssignedUser.AssignedToolIds.Add(SelectedTool.Id);
-                        await _userRepository.UpdateUserAsync(NewToolAssignedUser);
+                        var previousUser = Users.FirstOrDefault(u => u.AssignedToolIds.Contains(selectedItemId));
+                        if (previousUser != null && previousUser.Id != NewAssignedUser?.Id)
+                        {
+                            previousUser.AssignedToolIds.Remove(selectedItemId);
+                            await _userRepository.UpdateUserAsync(previousUser);
+                        }
+
+                        if (NewAssignedUser != null && !NewAssignedUser.AssignedToolIds.Contains(selectedItemId))
+                        {
+                            NewAssignedUser.AssignedToolIds.Add(selectedItemId);
+                            await _userRepository.UpdateUserAsync(NewAssignedUser);
+                        }
                     }
 
-                    await LoadToolsAsync();
-                    UnselectTool();
+                    await LoadItemsAsync();
+                    UnselectItem();
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to update tool");
-                await Application.Current.MainPage.DisplayAlert("Error", "Failed to update tool", "OK");
+                _logger.LogError(ex, "Failed to update item");
+                await Application.Current.MainPage.DisplayAlert("Error", "Failed to update item", "OK");
             }
         }
 
-        private async Task DeleteToolAsync()
+        private async Task DeleteItemAsync()
         {
             try
             {
-                if (SelectedTool != null)
+                if (SelectedItem != null)
                 {
-                    await _toolRepository.DeleteToolAsync(SelectedTool.Id);
+                    string selectedItemId = null;
 
-                    var user = Users.FirstOrDefault(u => u.AssignedToolIds.Contains(SelectedTool.Id));
-                    if (user != null)
+                    if (SelectedItem is Consumable consumable)
                     {
-                        user.AssignedToolIds.Remove(SelectedTool.Id);
-                        await _userRepository.UpdateUserAsync(user);
+                        selectedItemId = consumable.Id;
+                        await _toolRepository.DeleteConsumableAsync(consumable.Id);
+                    }
+                    else if (SelectedItem is Tool tool)
+                    {
+                        selectedItemId = tool.Id;
+                        await _toolRepository.DeleteToolAsync(tool.Id);
                     }
 
-                    Tools.Remove(SelectedTool);
+                    if (selectedItemId != null)
+                    {
+                        var user = Users.FirstOrDefault(u => u.AssignedToolIds.Contains(selectedItemId));
+                        if (user != null)
+                        {
+                            user.AssignedToolIds.Remove(selectedItemId);
+                            await _userRepository.UpdateUserAsync(user);
+                        }
+                    }
+
+                    Items.Remove(SelectedItem);
                     ClearForm();
-                    UnselectTool();
+                    UnselectItem();
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete tool");
-                await Application.Current.MainPage.DisplayAlert("Error", "Failed to delete tool", "OK");
+                _logger.LogError(ex, "Failed to delete item");
+                await Application.Current.MainPage.DisplayAlert("Error", "Failed to delete item", "OK");
             }
         }
 
-        private void UnselectTool()
+        private void UnselectItem()
         {
-            SelectedTool = null;
+            SelectedItem = null;
             ClearForm();
         }
 
         private void ClearForm()
         {
-            NewToolName = string.Empty;
-            NewToolDescription = string.Empty;
-            NewToolQRCode = string.Empty;
-            NewToolCategory = Categories.FirstOrDefault();
-            NewToolAssignedUser = null;
-            NewToolStatus = StatusEnum.Working;
+            NewName = string.Empty;
+            NewDescription = string.Empty;
+            NewQRCode = string.Empty;
+            NewCategory = Categories.FirstOrDefault();
+            NewAssignedUser = null;
+            NewStatus = StatusEnum.Working;
+            NewInitialValue = 0;
+            NewMaxValue = 0;
+            NewCurrentValue = 0;
         }
+
+        public object SelectedItem
+        {
+            get => _selectedItem;
+            set
+            {
+                SetProperty(ref _selectedItem, value);
+                if (value != null)
+                {
+                    if (value is Consumable consumable)
+                    {
+                        NewName = consumable.Name;
+                        NewDescription = consumable.Description;
+                        NewQRCode = consumable.QRCode;
+                        NewCategory = Categories.FirstOrDefault(c => c.Id == consumable.CategoryId);
+                        NewAssignedUser = Users.FirstOrDefault(u => u.Id == consumable.UserAssignedId);
+                        NewStatus = consumable.Status;
+                        NewInitialValue = consumable.InitialValue;
+                        NewMaxValue = consumable.MaxValue;
+                        NewCurrentValue = consumable.CurrentValue;
+                    }
+                    else if (value is Tool tool)
+                    {
+                        NewName = tool.Name;
+                        NewDescription = tool.Description;
+                        NewQRCode = tool.QRCode;
+                        NewCategory = Categories.FirstOrDefault(c => c.Id == tool.CategoryId);
+                        NewAssignedUser = Users.FirstOrDefault(u => u.Id == tool.UserAssignedId);
+                        NewStatus = tool.Status;
+                    }
+                }
+            }
+        }
+
+        private string _newName;
+        public string NewName
+        {
+            get => _newName;
+            set => SetProperty(ref _newName, value);
+        }
+
+        private string _newDescription;
+        public string NewDescription
+        {
+            get => _newDescription;
+            set => SetProperty(ref _newDescription, value);
+        }
+
+        private string _newQRCode;
+        public string NewQRCode
+        {
+            get => _newQRCode;
+            set => SetProperty(ref _newQRCode, value);
+        }
+
+        private Category _newCategory;
+        public Category NewCategory
+        {
+            get => _newCategory;
+            set => SetProperty(ref _newCategory, value);
+        }
+
+        private User _newAssignedUser;
+        public User NewAssignedUser
+        {
+            get => _newAssignedUser;
+            set => SetProperty(ref _newAssignedUser, value);
+        }
+
+        private StatusEnum _newStatus;
+        public StatusEnum NewStatus
+        {
+            get => _newStatus;
+            set => SetProperty(ref _newStatus, value);
+        }
+
+        private int _newInitialValue;
+        public int NewInitialValue
+        {
+            get => _newInitialValue;
+            set => SetProperty(ref _newInitialValue, value);
+        }
+
+        private int _newMaxValue;
+        public int NewMaxValue
+        {
+            get => _newMaxValue;
+            set => SetProperty(ref _newMaxValue, value);
+        }
+
+        private int _newCurrentValue;
+        public int NewCurrentValue
+        {
+            get => _newCurrentValue;
+            set => SetProperty(ref _newCurrentValue, value);
+        }
+
+        public ObservableCollection<Category> Categories { get; } = new ObservableCollection<Category>();
+        public ObservableCollection<User> Users { get; } = new ObservableCollection<User>();
+        public ObservableCollection<StatusEnum> Statuses { get; } = new ObservableCollection<StatusEnum>(Enum.GetValues(typeof(StatusEnum)).Cast<StatusEnum>());
     }
 }
