@@ -2,40 +2,104 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ToolsManagerApp.ViewModels"
              xmlns:conv="clr-namespace:ToolsManagerApp.Converters"
-             xmlns:local="clr-namespace:ToolsManagerApp"
              x:Class="ToolsManagerApp.Views.ToolsPage"
-             Title="Tools">
+             Title="Tools and Consumables">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <conv:IsConsumableConverter x:Key="IsConsumableConverter"/>
+            <conv:NullToFalseConverter x:Key="NullToFalseConverter"/>
+            <Style x:Key="EntryStyle" TargetType="Entry">
+                <Setter Property="Margin" Value="10"/>
+                <Setter Property="FontFamily" Value="Arial"/>
+                <Setter Property="FontSize" Value="16"/>
+            </Style>
+            <Style x:Key="ButtonStyle" TargetType="Button">
+                <Setter Property="HeightRequest" Value="50"/>
+                <Setter Property="Margin" Value="10,5"/>
+                <Setter Property="BackgroundColor" Value="#2196F3"/>
+                <Setter Property="TextColor" Value="White"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <ContentPage.BindingContext>
         <vm:ToolsViewModel />
     </ContentPage.BindingContext>
 
-    <ContentPage.Resources>
-        <ResourceDictionary>
-            <conv:NullToFalseConverter x:Key="NullToFalseConverter" />
-        </ResourceDictionary>
-    </ContentPage.Resources>
+    <Grid Padding="10">
+        <!-- Define two rows: one for the CollectionView, one for the rest of the controls -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-    <StackLayout Padding="10">
-        <ListView ItemsSource="{Binding Tools}" SelectedItem="{Binding SelectedTool}">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <TextCell Text="{Binding Name}" Detail="{Binding Description}" />
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+        <Picker Title="Select Type" ItemsSource="{Binding Types}"
+                SelectedItem="{Binding SelectedType, Mode=TwoWay}" Grid.Row="0"/>
+        
+        <ScrollView Grid.Row="1">
+            <StackLayout>
+                
 
-        <Button Text="Unselect Tool" Command="{Binding UnselectToolCommand}" IsVisible="{Binding SelectedTool, Converter={StaticResource NullToFalseConverter}}" />
+               
 
-        <Entry Placeholder="Tool Name" Text="{Binding NewToolName}" />
-        <Entry Placeholder="Tool Description" Text="{Binding NewToolDescription}" />
-        <Entry Placeholder="QR Code" Text="{Binding NewToolQRCode}" />
-        <Picker Title="Category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding NewToolCategory}" />
-        <Picker Title="Assigned User" ItemsSource="{Binding Users}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding NewToolAssignedUser}" />
-        <Picker Title="Status" ItemsSource="{Binding Statuses}" SelectedItem="{Binding NewToolStatus}" />
+                <Entry Placeholder="Name" Text="{Binding NewName, Mode=TwoWay}" Style="{StaticResource EntryStyle}"/>
+                <Entry Placeholder="Description" Text="{Binding NewDescription, Mode=TwoWay}" Style="{StaticResource EntryStyle}"/>
+                <Entry Placeholder="QR Code" Text="{Binding NewQRCode, Mode=TwoWay}" Style="{StaticResource EntryStyle}"/>
+                <StackLayout  Orientation="Horizontal">
+                    <Picker Margin="16" Title="Category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}"
+                            SelectedItem="{Binding NewCategory, Mode=TwoWay}"/>
+                    <Picker Margin="16" Title="Assigned User" ItemsSource="{Binding Users}" ItemDisplayBinding="{Binding Name}"
+                            SelectedItem="{Binding NewAssignedUser, Mode=TwoWay}"/>
+                    <Picker Margin="16" Title="Status" ItemsSource="{Binding Statuses}"
+                            SelectedItem="{Binding NewStatus, Mode=TwoWay}"/>
+                </StackLayout>
 
-        <Button Text="Add Tool" Command="{Binding AddToolCommand}" />
-        <Button Text="Update Tool" Command="{Binding UpdateToolCommand}" IsEnabled="{Binding SelectedTool, Converter={StaticResource NullToFalseConverter}}" />
-        <Button Text="Delete Tool" Command="{Binding DeleteToolCommand}" IsEnabled="{Binding SelectedTool, Converter={StaticResource NullToFalseConverter}}" />
-    </StackLayout>
+                <Entry Placeholder="Initial Value" Text="{Binding NewInitialValue, Mode=TwoWay}"
+                       IsVisible="{Binding IsConsumableSelected}"
+                       
+                       Style="{StaticResource EntryStyle}" Keyboard="Numeric"/>
+                <Entry Placeholder="Max Value" Text="{Binding NewMaxValue, Mode=TwoWay}"
+                       IsVisible="{Binding IsConsumableSelected}"
+                       Style="{StaticResource EntryStyle}" Keyboard="Numeric"/>
+                <Entry Placeholder="Current Value" Text="{Binding NewCurrentValue, Mode=TwoWay}"
+                       IsVisible="{Binding IsConsumableSelected}"
+                       Style="{StaticResource EntryStyle}" Keyboard="Numeric"/>
+
+                <Button Text="Add Item" Command="{Binding AddItemCommand}" Style="{StaticResource ButtonStyle}"/>
+
+                
+                        <!-- Label to show when no item is selected -->
+                <Label Text="Select/Press item to edit" 
+                       IsVisible="{Binding !SelectedItem, Converter={StaticResource NullToFalseConverter}, ConverterParameter=False}"
+                       HorizontalOptions="Center" VerticalOptions="CenterAndExpand" Margin="10"/>
+                <!-- Buttons to show when an item is selected -->
+                <StackLayout Orientation="Horizontal"
+                             IsVisible="{Binding SelectedItem, Converter={StaticResource NullToFalseConverter}}">
+                    <Button Text="Update Item" Command="{Binding UpdateItemCommand}"
+                            Style="{StaticResource ButtonStyle}"/>
+                    <Button Text="Delete Item" Command="{Binding DeleteItemCommand}"
+                            Style="{StaticResource ButtonStyle}"/>
+                    <Button Text="Unselect Item" Command="{Binding UnselectItemCommand}"
+                            Style="{StaticResource ButtonStyle}"/>
+                </StackLayout>
+                <!-- Limit the height of the CollectionView -->
+                <CollectionView ItemsSource="{Binding Items}" SelectionMode="Single" SelectedItem="{Binding SelectedItem}"
+                                HeightRequest="250">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="4" Margin="5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Label Grid.Row="0" Text="{Binding Name}" FontSize="Small" FontAttributes="Bold"/>
+                                <Label Grid.Row="1" Text="{Binding Description}" FontSize="Micro"/>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </StackLayout>
+        </ScrollView>
+    </Grid>
 </ContentPage>
